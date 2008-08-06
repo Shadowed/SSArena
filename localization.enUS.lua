@@ -13,6 +13,8 @@ SSArenaLocals = {
 	["POINTS"] = "POINTS",
 	["PERSONAL"] = "PERSONAL",
 	
+	["Rating"] = "Rating",
+	
 	-- Configuration
 	["Arena"] = "Arena",
 	["Show team score/rating summary on arena finish"] = "Show team score/rating summary on arena finish",

@@ -94,7 +94,7 @@ function SSArena:UPDATE_BATTLEFIELD_STATUS()
 		for i=0, 1 do
 			local oldRating, newRating = select(2, GetBattlefieldTeamInfo(1))
 			if( oldRating == newRating ) then
-				SSPVP:Print(L["Bugged or drawn game, no rating changed."])
+				SSArena:Print(L["Bugged or drawn game, no rating changed."])
 				return
 			end
 		end
@@ -158,13 +158,17 @@ function SSArena:UPDATE_BATTLEFIELD_STATUS()
 			personal = string.format(L["/ %d personal (%d rating)"], personalDiff, newPersonal)
 		end		
 		
-		SSPVP:Print(string.format("%s / %s %s", firstInfo, secondInfo, personal))
+		SSArena:Print(string.format("%s / %s %s", firstInfo, secondInfo, personal))
 		
 		-- Request new info
 		for i=1, MAX_ARENA_TEAMS do
 			ArenaTeamRoster(i)
 		end
 	end
+end
+
+function SSArena:Print(msg)
+	DEFAULT_CHAT_FRAME:AddMessage("|cFF33FF99SSArena|r: " .. msg)
 end
 
 -- BASIC ARENA GUI
@@ -747,24 +751,24 @@ SlashCmdList["SSARENA"] = function(input)
 	if( string.match(input, "points ([0-9]+)") ) then
 		local points = tonumber(string.match(input, "points ([0-9]+)"))
 
-		SSPVP:Print(string.format(L["[%d vs %d] %d points = %d rating"], 5, 5, points, getRating(points)))
-		SSPVP:Print(string.format(L["[%d vs %d] %d points = %d rating"], 3, 3, points, getRating(points, 3)))
-		SSPVP:Print(string.format(L["[%d vs %d] %d points = %d rating"], 2, 2, points, getRating(points, 2)))
+		SSArena:Print(string.format(L["[%d vs %d] %d points = %d rating"], 5, 5, points, getRating(points)))
+		SSArena:Print(string.format(L["[%d vs %d] %d points = %d rating"], 3, 3, points, getRating(points, 3)))
+		SSArena:Print(string.format(L["[%d vs %d] %d points = %d rating"], 2, 2, points, getRating(points, 2)))
 
 	-- Rating -> points
 	elseif( string.match(input, "rating ([0-9]+)") ) then
 		local rating = tonumber(string.match(input, "rating ([0-9]+)"))
 
-		SSPVP:Print(string.format(L["[%d vs %d] %d rating = %d points"], 5, 5, rating, getPoints(rating)))
-		SSPVP:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 3, 3, rating, getPoints(rating), pointPenalty[3] * 100, getPoints(rating, 3)))
-		SSPVP:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 2, 2, rating, getPoints(rating), pointPenalty[2] * 100, getPoints(rating, 2)))
+		SSArena:Print(string.format(L["[%d vs %d] %d rating = %d points"], 5, 5, rating, getPoints(rating)))
+		SSArena:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 3, 3, rating, getPoints(rating), pointPenalty[3] * 100, getPoints(rating, 3)))
+		SSArena:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 2, 2, rating, getPoints(rating), pointPenalty[2] * 100, getPoints(rating, 2)))
 
 	-- Rating changes if you win/lose against a certain rating
 	elseif( string.match(input, "change ([0-9]+) ([0-9]+)") ) then
 		local aRating, bRating = string.match(input, "change ([0-9]+) ([0-9]+)")
 		local aNew, aDiff, bNew, bDiff = getChange(tonumber(aRating), tonumber(bRating), true)
 
-		SSPVP:Print(string.format(L["+%d points (%d rating) / %d points (%d rating)"], aDiff, aNew, bDiff, bNew))
+		SSArena:Print(string.format(L["+%d points (%d rating) / %d points (%d rating)"], aDiff, aNew, bDiff, bNew))
 
 	-- Games required for 30%
 	elseif( string.match(input, "attend ([0-9]+) ([0-9]+)") ) then
@@ -777,10 +781,10 @@ SlashCmdList["SSARENA"] = function(input)
 				percent = 1.0
 			end
 
-			SSPVP:Print(string.format(L["%d games out of %d total is already above 30%% (%.2f%%)."], played, teamPlayed, percent * 100))
+			SSArena:Print(string.format(L["%d games out of %d total is already above 30%% (%.2f%%)."], played, teamPlayed, percent * 100))
 		else
 			local gamesNeeded = math.ceil(((0.3 - percent) / 0.70) * teamPlayed)
-			SSPVP:Print(string.format(L["%d more games have to be played (%d total) to reach 30%%."], gamesNeeded, teamPlayed + gamesNeeded))
+			SSArena:Print(string.format(L["%d more games have to be played (%d total) to reach 30%%."], gamesNeeded, teamPlayed + gamesNeeded))
 		end
 
 	-- Arena UI
