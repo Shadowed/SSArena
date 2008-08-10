@@ -15,7 +15,7 @@ local function get(info)
 	return SSArena.db.profile[info.arg]
 end
 
-local function loadOptions()
+function Config:LoadOptions()
 	-- If options weren't loaded yet, then do so now
 	if( not SSPVP3.options ) then
 		SSPVP3.options = {
@@ -26,21 +26,27 @@ local function loadOptions()
 		}
 
 		config:RegisterOptionsTable("SSPVP3", SSPVP3.options)
-		dialog:SetDefaultSize("SSPVP3", 625, 575)
+		dialog:SetDefaultSize("SSPVP3", 600, 550)
+		
+		-- Load other SSPVP3 modules configurations
+		for field, data in pairs(SSPVP3) do
+			if( type(data) == "table" and data.Config and data.Config ~= Config ) then
+				data.Config:LoadOptions()
+			end
+		end
 	end
 	
 	-- Already loaded
 	if( SSPVP3.options.args.arena ) then
 		return
 	end
-	
+		
 	SSPVP3.options.args.arena = {
 		type = "group",
 		order = 1,
 		name = L["Arena"],
 		get = get,
 		set = set,
-		handler = Config,
 		args = {
 			score = {
 				order = 1,
@@ -73,8 +79,26 @@ function Config:Open()
 		config = LibStub("AceConfig-3.0")
 		dialog = LibStub("AceConfigDialog-3.0")
 
-		loadOptions()
+		Config:LoadOptions()
 	end
 
 	dialog:Open("SSPVP3")
+end
+
+-- SSPVP3 Slash command
+if( not SLASH_SSPVP1 ) then
+	SLASH_SSPVP1 = "/sspvp3"
+	
+	-- Mostly this is here while I develop this, I'll remove it eventually so it always registers it
+	if( not SLASH_ACECONSOLE_SSPVP1 ) then
+		SLASH_SSPVP2 = "/sspvp"
+	end
+	
+	SlashCmdList["SSPVP"] = function()
+		DEFAULT_CHAT_FRAME:AddMessage(L["SSPVP3 module slash commands"])
+		
+		for _, help in pairs(SSPVP3.Slash) do
+			DEFAULT_CHAT_FRAME:AddMessage(help)
+		end
+	end
 end

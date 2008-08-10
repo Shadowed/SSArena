@@ -42,4 +42,7 @@ SSArenaLocals = {
 	
 	["Won: %d rating (%d points gained)"] = "Won: %d rating (%d points gained)",
 	["Lost: %d rating (%d points lost)"] = "Lost: %d rating (%d points lost)",
+	
+	["/ssarena - Arena functions like conversions."] = "/ssarena - Arena functions like conversions.",
+	["SSPVP3 module slash commands"] = "SSPVP3 module slash commands",
 }

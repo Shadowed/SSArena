@@ -19,8 +19,11 @@ function SSArena:OnInitialize()
 
 	-- SSPVP3 will be our "global" table if needed later on
 	SSPVP3 = SSPVP3 or {}
+	SSPVP3.Slash = SSPVP3.Slash or {}
 	SSPVP3.Arena = SSArena
-
+	
+	table.insert(SSPVP3.Slash, L["/ssarena - Arena functions like conversions."])
+	
 	-- Try and make sure arena info is up to date
 	for i=1, MAX_ARENA_TEAMS do
 		ArenaTeamRoster(i)
