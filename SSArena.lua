@@ -1,36 +1,36 @@
-SSArena = LibStub("AceAddon-3.0"):NewAddon("SSArena", "AceEvent-3.0")
-
+local SSArena = {}
 local L = SSArenaLocals
 
 -- Blizzard likes to change this monthly, so lets just store it here to make it easier
 local pointPenalty = {[5] = 1.0, [3] = 0.88, [2] = 0.76}
 local arenaTeams = {}
 
-function SSArena:OnInitialize()
-	self.defaults = {
-		profile = {
-			score = true,
-			personal = true,
-			highestPersonal = true,
-		},
-	}
-	
-	self.db = LibStub:GetLibrary("AceDB-3.0"):New("SSArenaDB", self.defaults)
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, addon)
+	if( event == "ADDON_LOADED" and addon == "SSArena" ) then
+		if( not SSArenaDB or not SSArenaDB.isUpdated ) then
+			SSArenaDB = {
+				score = true,
+				personal = true,
+				highestPersonal = true,
+				isUpdated = true,
+			}
+		end
+		
+		SSArena.db = SSArenaDB
 
-	-- SSPVP3 will be our "global" table if needed later on
-	SSPVP3 = SSPVP3 or {}
-	SSPVP3.Slash = SSPVP3.Slash or {}
-	SSPVP3.Arena = SSArena
-	
-	table.insert(SSPVP3.Slash, L["/ssarena - Arena functions like conversions."])
-	
-	-- Try and make sure arena info is up to date
-	for i=1, MAX_ARENA_TEAMS do
-		ArenaTeamRoster(i)
+		-- Try and make sure arena info is up to date
+		for i=1, MAX_ARENA_TEAMS do
+			ArenaTeamRoster(i)
+		end
+	elseif( event == "ADDON_LOADED" and addon == "Blizzard_InspectUI" ) then
+		hooksecurefunc("InspectPVPTeam_Update", InspectPVPTeam_Update)
+	elseif( event == "UPDATE_BATTLEFIELD_STATUS" ) then
+		SSArena:UPDATE_BATTLEFIELD_STATUS()
 	end
-	
-	self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
-end
+end)
 
 -- ARENA CONVERSIONS
 -- Rating change for winning, or losing am atch
@@ -92,7 +92,7 @@ end
 -- Rating/personal rating change
 -- How many points gained/lost
 function SSArena:UPDATE_BATTLEFIELD_STATUS()
-	if( self.db.profile.score and GetBattlefieldWinner() and select(2, IsActiveBattlefieldArena()) ) then
+	if( self.db.score and GetBattlefieldWinner() and select(2, IsActiveBattlefieldArena()) ) then
 		-- Check if we had a bugged game and thus no rating change
 		for i=0, 1 do
 			local oldRating, newRating = select(2, GetBattlefieldTeamInfo(1))
@@ -155,7 +155,7 @@ function SSArena:UPDATE_BATTLEFIELD_STATUS()
 		end
 		
 		local personal = ""
-		if( self.db.profile.personal and playerPersonal ) then
+		if( self.db.personal and playerPersonal ) then
 			-- Figure out our personal rating change
 			local newPersonal, personalDiff = getChange(playerPersonal, enemyRating, playerWon)
 			personal = string.format(L["/ %d personal (%d rating)"], personalDiff, newPersonal)
@@ -647,7 +647,7 @@ hooksecurefunc("PVPTeam_Update", function()
 end)
 
 -- Inspection frame
-local function InspectPVPTeam_Update()
+local function New_InspectPVPTeam_Update()
 	local teams = {{size = 2}, {size = 3}, {size = 5}}
 
 	-- Figure out which teams they have
@@ -675,23 +675,16 @@ local function InspectPVPTeam_Update()
 	end
 end
 
--- If the inspection ui isn't loaded yet, wait for it to be before hooking it
-if( not IsAddOnLoaded("Blizzard_InspectUI") ) then
-	SSArena:RegisterEvent("ADDON_LOADED", function(self, event, addon)
-		if( addon == "Blizzard_InspectUI" ) then
-			hooksecurefunc("InspectPVPTeam_Update", InspectPVPTeam_Update)
-			self:UnregisterEvent("ADDON_LOADED")
-		end
-	end)
-else
-	hooksecurefunc("InspectPVPTeam_Update", InspectPVPTeam_Update)
+-- If it's already loaded, hook it. If it isn't the code above will do it
+if( InspectPVPTeam_Update ) then
+	hooksecurefunc("InspectPVPTeam_Update", New_InspectPVPTeam_Update)
 end
 
 -- SHOW THE HIGHEST PERSONAL RATING
 local personalFrame
 hooksecurefunc("PVPHonor_Update", function()	
 	-- Don't modify this
-	if( not SSArena.db.profile.highestPersonal ) then
+	if( not SSArena.db.highestPersonal ) then
 		return
 	end
 
@@ -747,6 +740,7 @@ end)
 
 -- Slash commands
 SLASH_SSARENA1 = "/ssarena"
+SLASH_SSARENA2 = "/arena"
 SlashCmdList["SSARENA"] = function(input)
 	input = string.lower(input or "")
 
@@ -795,16 +789,41 @@ SlashCmdList["SSARENA"] = function(input)
 		SSArena:CreateUI()
 		SSArena.frame:Show()
 
-	-- Configuration
-	elseif( input == "ui" ) then
-		SSArena.Config:Open()
+	-- Options
+	elseif( input == "score" ) then
+		SSArena.db.score = not SSArena.db.score
+		
+		if( SSArena.db.score ) then
+			SSArena:Print(string.format(L["Team summary is %s!"], L["enabled"]))
+		else
+			SSArena:Print(string.format(L["Team summary is %s!"], L["disabled"]))
+		end
+	
+	elseif( input == "personal" ) then
+		SSArena.db.personal = not SSArena.db.personal
+	
+		if( SSArena.db.personal ) then
+			SSArena:Print(string.format(L["Personal in team summary is %s!"], L["enabled"]))
+		else
+			SSArena:Print(string.format(L["Personal in team summary is %s!"], L["disabled"]))
+		end
+
+	elseif( input == "highest" ) then
+		SSArena.db.highestPersonal = not SSArena.db.highestPersonal
+		
+		if( SSArena.db.highestPersonal ) then
+			SSArena:Print(string.format(L["Highest personal rating is %s! A reloadui is required for this to take effect."], L["enabled"]))
+		else
+			SSArena:Print(string.format(L["Highest personal rating is %s! A reloadui is required for this to take effect."], L["disabled"]))
+		end	
 	else
 		DEFAULT_CHAT_FRAME:AddMessage(L["SSArena slash commands"])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - rating <rating> - Calculates points given from the passed rating."])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - points <points> - Calculates rating required to reach the passed points."])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - attend <played> <team> - Calculates games required to reach 30% using the passed games <played> out of the <team> games played."])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - change <winner rating> <loser rating> - Calculates points gained/lost assuming the <winner rating> beats <loser rating>."])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - rating <rating> - Rating -> Points conversion."])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - points <points> - Points -> Rating conversion."])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - attend <played> <team> - Figure out how many games to play to reach 30%."])
 		DEFAULT_CHAT_FRAME:AddMessage(L[" - arena - Shows a small UI for entering rating/point/attendance/change info."])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - ui - Shows the configuration UI"])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - score - Toggles showing team score/rating summary on arena end."])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - personal - Toggles showing personal rating in team summary."])
+		DEFAULT_CHAT_FRAME:AddMessage(L[" - highest - Toggles showing highest personal rating on pvp frame."])
 	end
 end

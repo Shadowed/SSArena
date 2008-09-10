@@ -15,22 +15,24 @@ SSArenaLocals = {
 	
 	["Rating"] = "Rating",
 	
-	-- Configuration
-	["Arena"] = "Arena",
-	["Show team score/rating summary on arena finish"] = "Show team score/rating summary on arena finish",
-	["Show personal rating changes in team summary"] = "Show personal rating changes in team summary",
-	["Show highest personal rating on pvp frame"] = "Show highest personal rating on pvp frame",
-	["A /console reloadui is required for this to take effect if you disable this."] = "A /console reloadui is required for this to take effect if you disable this.",
-	
 	-- Slash commands
 	["SSArena slash commands"] = "SSArena slash commands",
-	[" - rating <rating> - Calculates points given from the passed rating."] = " - rating <rating> - Calculates points given from the passed rating.",
-	[" - points <points> - Calculates rating required to reach the passed points."] = " - points <points> - Calculates rating required to reach the passed points.",
-	[" - attend <played> <team> - Calculates games required to reach 30% using the passed games <played> out of the <team> games played."] = " - attend <played> <team> - Calculates games required to reach 30% using the passed games <played> out of the <team> games played.",
+	[" - rating <rating> - Rating -> Points conversion."] = " - rating <rating> - Rating -> Points conversion.",
+	[" - points <points> - Points -> Rating conversion."] = " - points <points> - Points -> Rating conversion.",
+	[" - attend <played> <team> - Figure out how many games to play to reach 30%."] = " - attend <played> <team> - Figure out how many games to play to reach 30%.",
 	[" - change <winner rating> <loser rating> - Calculates points gained/lost assuming the <winner rating> beats <loser rating>."] = " - change <winner rating> <loser rating> - Calculates points gained/lost assuming the <winner rating> beats <loser rating>.",
 	[" - arena - Shows a small UI for entering rating/point/attendance/change info."] = " - arena - Shows a small UI for entering rating/point/attendance/change info.",
-	[" - ui - Shows the configuration UI"] = " - ui - Shows the configuration UI",
+	[" - score - Toggles showing team score/rating summary on arena end."] = " - score - Toggles showing team score/rating summary on arena end.",
+	[" - personal - Toggles showing personal rating in team summary."] = " - personal - Toggles showing personal rating in team summary.",
+	[" - highest - Toggles showing highest personal rating on pvp frame."] = " - highest - Toggles showing highest personal rating on pvp frame.",
+	
+	["enabled"] = "enabled",
+	["disabled"] = "disabled",
 
+	["Team summary is %s!"] = "Team summary is %s!",
+	["Personal in team summary is %s!"] = "Personal in team summary is %s!",
+	["Highest personal rating is %s! A reloadui is required for this to take effect."] = "Highest personal rating is %s! A reloadui is required for this to take effect.",
+	
 	["[%d vs %d] %d rating = %d points"] = "[%d vs %d] %d rating = %d points",
 	["[%d vs %d] %d rating = %d points - %d%% = %d points"] = "[%d vs %d] %d rating = %d points - %d%% = %d points",
 	["[%d vs %d] %d points = %d rating"] = "[%d vs %d] %d points = %d rating",
