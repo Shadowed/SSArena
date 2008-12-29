@@ -1,4 +1,4 @@
-## Interface: 20400
+## Interface: 30000
 ## Title: SSArena
 ## Notes: General arena specific changes
 ## Author: Mayen

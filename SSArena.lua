@@ -620,19 +620,11 @@ hooksecurefunc("PVPTeam_Update", function()
 	-- Annd now display
 	local buttonIndex = 0
 	for _, value in pairs(teams) do
+		buttonIndex = buttonIndex + 1 
 		if( value.index ) then
-			buttonIndex = buttonIndex + 1 
-			
 			SSArena:UpdateRatingPoints("PVPTeam" .. buttonIndex, GetArenaTeam(value.index))
 			SSArena:UpdateDisplay("PVPTeam" .. buttonIndex, GetArenaTeam(value.index))
-		end
-	end
-
-	-- Hide all of our custom stats if we aren't showing this
-	for _, value in pairs(teams) do
-		if( not value.index ) then
-			buttonIndex = buttonIndex + 1 
-			
+		else
 			local frame = getglobal(string.format("PVPTeam%d", buttonIndex))
 			if( frame.SSArena ) then
 				for _, row in pairs(frame.SSArena) do
