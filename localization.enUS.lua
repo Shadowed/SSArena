@@ -1,7 +1,6 @@
 SSArenaLocals = {
-	["%s %d points (%d rating)"] = "%s %d points (%d rating)",
-	["/ %d personal (%d rating)"] = "/ %d personal (%d rating)",
-
+	["%s %d points (%d rating, %d skill)"] = "%s %d points (%d rating, %d skill)",
+	
 	["Season"] = "Season",
 	["Week"] = "Week",
 	
@@ -14,13 +13,13 @@ SSArenaLocals = {
 	["PERSONAL"] = "PERSONAL",
 	
 	["Rating"] = "Rating",
+	["Bugged or drawn game, no rating changed."] = "Bugged or drawn game, no rating changed.",
 	
 	-- Slash commands
 	["SSArena slash commands"] = "SSArena slash commands",
 	[" - rating <rating> - Rating -> Points conversion."] = " - rating <rating> - Rating -> Points conversion.",
 	[" - points <points> - Points -> Rating conversion."] = " - points <points> - Points -> Rating conversion.",
 	[" - attend <played> <team> - Figure out how many games to play to reach 30%."] = " - attend <played> <team> - Figure out how many games to play to reach 30%.",
-	[" - change <winner rating> <loser rating> - Calculates points gained/lost assuming the <winner rating> beats <loser rating>."] = " - change <winner rating> <loser rating> - Calculates points gained/lost assuming the <winner rating> beats <loser rating>.",
 	[" - arena - Shows a small UI for entering rating/point/attendance/change info."] = " - arena - Shows a small UI for entering rating/point/attendance/change info.",
 	[" - score - Toggles showing team score/rating summary on arena end."] = " - score - Toggles showing team score/rating summary on arena end.",
 	[" - personal - Toggles showing personal rating in team summary."] = " - personal - Toggles showing personal rating in team summary.",
@@ -44,7 +43,4 @@ SSArenaLocals = {
 	
 	["Won: %d rating (%d points gained)"] = "Won: %d rating (%d points gained)",
 	["Lost: %d rating (%d points lost)"] = "Lost: %d rating (%d points lost)",
-	
-	["/ssarena - Arena functions like conversions."] = "/ssarena - Arena functions like conversions.",
-	["SSPVP3 module slash commands"] = "SSPVP3 module slash commands",
 }

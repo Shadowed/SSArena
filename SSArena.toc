@@ -1,8 +1,7 @@
-## Interface: 30000
+## Interface: 30100
 ## Title: SSArena
 ## Notes: General arena specific changes
-## Author: Mayen
-## Version: $Revision: 599 $
+## Author: Mayen/Selari
 ## SavedVariables: SSArenaDB
 
 localization.enUS.lua

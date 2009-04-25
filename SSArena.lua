@@ -13,7 +13,6 @@ frame:SetScript("OnEvent", function(self, event, addon)
 		if( not SSArenaDB or not SSArenaDB.isUpdated ) then
 			SSArenaDB = {
 				score = true,
-				personal = true,
 				highestPersonal = true,
 				isUpdated = true,
 			}
@@ -33,24 +32,6 @@ frame:SetScript("OnEvent", function(self, event, addon)
 end)
 
 -- ARENA CONVERSIONS
--- Rating change for winning, or losing am atch
-local function getChange(aRate, bRate, aWon)	
-	local aChance = 1 / ( 1 + 10 ^ ( ( bRate - aRate ) / 400 ) )
-	local bChance = 1 / ( 1 + 10 ^ ( ( aRate - bRate ) / 400 ) )
-
-	local aNew, bNew
-	if( aWon ) then
-		aNew = math.floor(aRate + 32 * (1 - aChance))
-		bNew = math.ceil(bRate + 32 * (0 - bChance))
-	else
-		aNew = math.ceil(aRate + 32 * (0 - aChance))
-		bNew = math.floor(bRate + 32 * (1 - bChance))
-	end
-
-	-- aNew, aDiff, bNew, bDiff
-	return aNew, aNew - aRate, bNew, bNew - bRate
-end
-
 -- RATING -> POINTS
 local function getPoints(rating, teamSize)
 	local penalty = pointPenalty[teamSize or 5]
@@ -95,11 +76,15 @@ function SSArena:UPDATE_BATTLEFIELD_STATUS()
 	if( self.db.score and GetBattlefieldWinner() and select(2, IsActiveBattlefieldArena()) ) then
 		-- Check if we had a bugged game and thus no rating change
 		for i=0, 1 do
-			local oldRating, newRating = select(2, GetBattlefieldTeamInfo(1))
-			if( oldRating == newRating ) then
-				SSArena:Print(L["Bugged or drawn game, no rating changed."])
+			if( select(2, GetBattlefieldTeamInfo(i)) < 0 ) then
+				self:Print(L["Bugged or drawn game, no rating changed."])
 				return
 			end
+		end
+		
+		if( not GetBattlefieldTeamInfo(GetBattlefieldWinner()) ) then
+			self:Print(L["Bugged or drawn game, no rating changed."])
+			return
 		end
 
 		-- Figure out what bracket we're in
@@ -136,37 +121,16 @@ function SSArena:UPDATE_BATTLEFIELD_STATUS()
 		-- Ensure that the players team is shown first
 		local firstInfo, secondInfo, playerWon, playerPersonal, enemyRating
 		for i=0, 1 do
-			local teamName, oldRating, newRating = GetBattlefieldTeamInfo(i)
+			local teamName, oldRating, newRating, teamSkill = GetBattlefieldTeamInfo(i)
 			if( arenaTeams[teamName .. bracket] ) then
-				firstInfo = string.format(L["%s %d points (%d rating)"], teamName, newRating - oldRating, newRating)
-				
-				-- Only show our personal rating change if it's different from our teams rating
-				if( playerPersonal ~= oldRating ) then
-					playerPersonal = arenaTeams[teamName .. bracket].personal
-				end
-				
-				if( newRating > oldRating ) then
-					playerWon = true
-				end
+				firstInfo = string.format(L["%s %d points (%d rating, %d skill)"], teamName, newRating - oldRating, newRating, teamSkill)
 			else
-				secondInfo = string.format(L["%s %d points (%d rating)"], teamName, newRating - oldRating, newRating)
+				secondInfo = string.format(L["%s %d points (%d rating, %d skill)"], teamName, newRating - oldRating, newRating, teamSkill)
 				enemyRating = oldRating
 			end
 		end
 		
-		local personal = ""
-		if( self.db.personal and playerPersonal ) then
-			-- Figure out our personal rating change
-			local newPersonal, personalDiff = getChange(playerPersonal, enemyRating, playerWon)
-			personal = string.format(L["/ %d personal (%d rating)"], personalDiff, newPersonal)
-		end		
-		
-		SSArena:Print(string.format("%s / %s %s", firstInfo, secondInfo, personal))
-		
-		-- Request new info
-		for i=1, MAX_ARENA_TEAMS do
-			ArenaTeamRoster(i)
-		end
+		self:Print(string.format("%s / %s", firstInfo, secondInfo))
 	end
 end
 
@@ -191,15 +155,6 @@ local function convertRatingsPoint(self)
 	SSArena.frame.ratingText5:SetFormattedText(L["[%d vs %d] %d rating = %d points"], 2, 2, rating, getPoints(rating, 2))
 end
 
-local function getArenaChange(self)
-	local teamA = SSArena.frame.teamA:GetNumber()
-	local teamB = SSArena.frame.teamB:GetNumber()
-	
-	local aNew, aDiff, bNew, bDiff = getChange(teamA, teamB, true)
-	SSArena.frame.teamAText:SetFormattedText(L["Won: %d rating (%d points gained)"], aNew, aDiff)
-	SSArena.frame.teamBText:SetFormattedText(L["Lost: %d rating (%d points lost)"], bNew, bDiff)
-end
-
 function SSArena:CreateUI()
 	if( self.frame ) then
 		return
@@ -207,7 +162,7 @@ function SSArena:CreateUI()
 	
 	self.frame = CreateFrame("Frame", "SSArenaGUI", UIParent)
 	self.frame:SetWidth(225)
-	self.frame:SetHeight(265)
+	self.frame:SetHeight(200)
 	self.frame:SetMovable(true)
 	self.frame:EnableMouse(true)
 	self.frame:SetClampedToScreen(true)
@@ -230,10 +185,10 @@ function SSArena:CreateUI()
 	
 	local title = CreateFrame("Button", nil, self.frame)
 	title:SetPoint("TOP", 0, 4)
-	title:SetText("SSPVP")
+	title:SetText("SSArena")
 	title:SetPushedTextOffset(0, 0)
 
-	title:SetTextFontObject(GameFontNormal)
+	title:SetNormalFontObject(GameFontNormal)
 	title:SetHeight(20)
 	title:SetWidth(200)
 	title:RegisterForDrag("LeftButton")
@@ -313,53 +268,6 @@ function SSArena:CreateUI()
 	-- 344 = 1500 rating in 5s
 	rating:SetNumber(1500)
 	rating:SetMaxLetters(4)
-	
-	-- Rating change based on winning or losing
-	local teamA = CreateFrame("EditBox", "SSArenaRatingA", self.frame, "InputBoxTemplate")
-	teamA:SetHeight(20)
-	teamA:SetWidth(60)
-	teamA:SetAutoFocus(false)
-	teamA:SetNumeric(true)
-	teamA:ClearAllPoints()
-	teamA:SetPoint("BOTTOMLEFT", self.frame.ratingText5, "BOTTOMLEFT", 5, -30)
-	teamA:SetScript("OnTextChanged", getArenaChange)
-	teamA:SetScript("OnTabPressed", function() SSArena.frame.teamB:SetFocus() end)
-
-	self.frame.teamA = teamA
-
-	self.frame.teamVs = rating:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	self.frame.teamVs:SetHeight(15)
-	self.frame.teamVs:SetText(L["Vs"])
-	self.frame.teamVs:SetPoint("TOPRIGHT", teamA, "TOPRIGHT", 28, -3)
-
-	local teamB = CreateFrame("EditBox", "SSArenaRatingB", self.frame, "InputBoxTemplate")
-	teamB:SetHeight(20)
-	teamB:SetWidth(60)
-	teamB:SetAutoFocus(false)
-	teamB:SetNumeric(true)
-	teamB:ClearAllPoints()
-	teamB:SetPoint("TOPRIGHT", self.frame.teamVs, "TOPRIGHT", 80, 3)
-	teamB:SetScript("OnTextChanged", getArenaChange)
-	teamB:SetScript("OnTabPressed", function() SSArena.frame.teamA:SetFocus() end)
-	
-	self.frame.teamB = teamB
-	
-	-- Display text
-	self.frame.teamAText = rating:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	self.frame.teamAText:SetHeight(15)
-	self.frame.teamAText:SetPoint("BOTTOMLEFT", teamA, "BOTTOMLEFT", -5, -20)
-
-	self.frame.teamBText = rating:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	self.frame.teamBText:SetHeight(15)
-	self.frame.teamBText:SetPoint("BOTTOMLEFT", self.frame.teamAText, "BOTTOMLEFT", 0, -15)
-		
-	-- Defaults
-	teamA:SetMaxLetters(4)
-	teamA:SetNumber(1600)
-	
-
-	teamB:SetMaxLetters(4)
-	teamB:SetNumber(1500)
 end
 
 -- INSPECTION AND PLAYER ARENA TEAM MODIFICATIONS
@@ -752,13 +660,6 @@ SlashCmdList["SSARENA"] = function(input)
 		SSArena:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 3, 3, rating, getPoints(rating), pointPenalty[3] * 100, getPoints(rating, 3)))
 		SSArena:Print(string.format(L["[%d vs %d] %d rating = %d points - %d%% = %d points"], 2, 2, rating, getPoints(rating), pointPenalty[2] * 100, getPoints(rating, 2)))
 
-	-- Rating changes if you win/lose against a certain rating
-	elseif( string.match(input, "change ([0-9]+) ([0-9]+)") ) then
-		local aRating, bRating = string.match(input, "change ([0-9]+) ([0-9]+)")
-		local aNew, aDiff, bNew, bDiff = getChange(tonumber(aRating), tonumber(bRating), true)
-
-		SSArena:Print(string.format(L["+%d points (%d rating) / %d points (%d rating)"], aDiff, aNew, bDiff, bNew))
-
 	-- Games required for 30%
 	elseif( string.match(input, "attend ([0-9]+) ([0-9]+)") ) then
 		local played, teamPlayed = string.match(input, "attend ([0-9]+) ([0-9]+)")
@@ -791,15 +692,6 @@ SlashCmdList["SSARENA"] = function(input)
 			SSArena:Print(string.format(L["Team summary is %s!"], L["disabled"]))
 		end
 	
-	elseif( input == "personal" ) then
-		SSArena.db.personal = not SSArena.db.personal
-	
-		if( SSArena.db.personal ) then
-			SSArena:Print(string.format(L["Personal in team summary is %s!"], L["enabled"]))
-		else
-			SSArena:Print(string.format(L["Personal in team summary is %s!"], L["disabled"]))
-		end
-
 	elseif( input == "highest" ) then
 		SSArena.db.highestPersonal = not SSArena.db.highestPersonal
 		
@@ -815,7 +707,6 @@ SlashCmdList["SSARENA"] = function(input)
 		DEFAULT_CHAT_FRAME:AddMessage(L[" - attend <played> <team> - Figure out how many games to play to reach 30%."])
 		DEFAULT_CHAT_FRAME:AddMessage(L[" - arena - Shows a small UI for entering rating/point/attendance/change info."])
 		DEFAULT_CHAT_FRAME:AddMessage(L[" - score - Toggles showing team score/rating summary on arena end."])
-		DEFAULT_CHAT_FRAME:AddMessage(L[" - personal - Toggles showing personal rating in team summary."])
 		DEFAULT_CHAT_FRAME:AddMessage(L[" - highest - Toggles showing highest personal rating on pvp frame."])
 	end
 end
