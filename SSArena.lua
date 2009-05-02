@@ -275,8 +275,10 @@ function SSArena:UpdateRatingPoints(parent, ...)
 	local teamName, teamSize, teamRating, weekPlayed, weekWins, seasonPlayed, seasonWins, playerPlayed, seasonPlayerPlayed, teamRank, playerRating = select(1, ...)
 	if( teamRating == 0 ) then
 		return
+	elseif( playerRating <= (teamRating - 150) ) then
+		teamRating = playerRating
 	end
-
+	
 	-- Add points gained next to the rating
 	local name = parent .. "Data"
 	
