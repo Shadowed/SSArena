@@ -54,7 +54,7 @@ end
 local function getRating(points, teamSize)
 	local penalty = pointPenalty[teamSize or 5]
 	
-	local rating = rating = (math.log(((1511.26 * penalty / points) - 1) / 1639.28) / -0.00412)
+	local rating = (math.log(((1511.26 * penalty / points) - 1) / 1639.28) / -0.00412)
 	
 	rating = math.floor(rating + 0.5)
 	
