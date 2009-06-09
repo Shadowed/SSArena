@@ -40,7 +40,7 @@ local function getPoints(rating, teamSize)
 	if( rating > 1500 ) then
 		points = (1511.26 / (1 + 1639.28 * math.exp(1) ^ (-0.00412 * rating))) * penalty
 	else
-		rating = 344 * penalty
+		points = 344 * penalty
 	end
 	
 	if( points < 0 or points ~= points ) then
@@ -273,7 +273,7 @@ function SSArena:UpdateRatingPoints(parent, ...)
 	elseif( playerRating <= (teamRating - 150) ) then
 		teamRating = playerRating
 	end
-	
+		
 	-- Add points gained next to the rating
 	local name = parent .. "Data"
 	
